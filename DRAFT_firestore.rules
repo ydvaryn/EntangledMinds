@@ -1,0 +1,143 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definition
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'one.aryan7@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // 2. Validation Blueprints
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'name', 'role', 'created_at']) &&
+             data.keys().size() >= 4 && data.keys().size() <= 7 &&
+             data.email is string && data.email.size() <= 256 &&
+             data.name is string && data.name.size() <= 128 &&
+             data.role in ['user', 'admin'] &&
+             data.created_at == request.time;
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['name', 'slug']) &&
+             data.keys().size() >= 2 && data.keys().size() <= 4 &&
+             data.name is string && data.name.size() <= 128 &&
+             data.slug is string && data.slug.size() <= 128;
+    }
+
+    function isValidTutorial(data) {
+      return data.keys().hasAll(['title', 'slug', 'content', 'category_id', 'author_id', 'created_at', 'updated_at']) &&
+             data.keys().size() >= 7 && data.keys().size() <= 12 &&
+             data.title is string && data.title.size() <= 256 &&
+             data.slug is string && data.slug.size() <= 128 &&
+             data.content is string && data.content.size() <= 1048576 && // 1MB limit check
+             data.category_id is string &&
+             data.author_id == request.auth.uid &&
+             data.created_at is timestamp &&
+             data.updated_at == request.time;
+    }
+
+    function isValidComment(data) {
+      return data.keys().hasAll(['content', 'user_id', 'tutorial_id', 'created_at']) &&
+             data.keys().size() >= 4 && data.keys().size() <= 6 &&
+             data.content is string && data.content.size() <= 5000 &&
+             data.user_id == request.auth.uid &&
+             data.tutorial_id is string &&
+             data.created_at == request.time;
+    }
+
+    function isValidFavorite(data) {
+      return data.keys().hasAll(['user_id', 'tutorial_id', 'created_at']) &&
+             data.keys().size() == 3 &&
+             data.user_id == request.auth.uid &&
+             data.tutorial_id is string &&
+             data.created_at == request.time;
+    }
+
+    function isValidContactMessage(data) {
+      return data.keys().hasAll(['name', 'email', 'subject', 'message', 'created_at']) &&
+             data.keys().size() == 5 &&
+             data.name is string && data.name.size() <= 128 &&
+             data.email is string && data.email.size() <= 256 &&
+             data.subject is string && data.subject.size() <= 256 &&
+             data.message is string && data.message.size() <= 10000 &&
+             data.created_at == request.time;
+    }
+
+    // 1. Users Collection
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'bio', 'avatar'])
+      ) || isAdmin();
+    }
+
+    // 2. Categories Collection
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 3. Tutorials Collection
+    match /tutorials/{tutorialId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidTutorial(incoming());
+      allow update: if isAdmin() && isValidTutorial(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // 4. Comments Collection
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isEmailVerified() && isValidComment(incoming());
+      allow delete: if isAdmin() || (isSignedIn() && existing().user_id == request.auth.uid);
+      // No updates for comments to keep original dialogue integrity
+    }
+
+    // 5. Favorites Collection
+    match /favorites/{favoriteId} {
+      allow list: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow get: if isSignedIn() && existing().user_id == request.auth.uid;
+      allow create: if isSignedIn() && isValidFavorite(incoming());
+      allow delete: if isSignedIn() && existing().user_id == request.auth.uid;
+    }
+
+    // 6. Contact Messages
+    match /contact_messages/{messageId} {
+      allow create: if true; // Public contact form
+      allow read: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-brand-primary: #4F46E5; /* Indigo 600 */
+  --color-brand-primary-hover: #4338CA; /* Indigo 700 */
+  --color-brand-bg: #F8FAFC; /* Slate 50 */
+  --color-brand-border: #E2E8F0; /* Slate 200 */
+  --color-brand-text-main: #0F172A; /* Slate 900 */
+  --color-brand-text-muted: #64748B; /* Slate 500 */
+  
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--color-brand-bg)] text-[var(--color-brand-text-main)] font-sans antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-bold tracking-tight;
+  }
+}
+
+.markdown-body {
+  @apply prose prose-slate max-w-none prose-headings:text-brand-text-main prose-code:font-mono prose-pre:bg-slate-900 prose-pre:text-white prose-a:text-brand-primary;
+}
+
+.auth-card {
+  @apply bg-white rounded-2xl shadow-sm border border-brand-border;
+}
+
+.btn-primary {
+  @apply px-6 py-2 bg-brand-primary text-white rounded-lg font-semibold transition-all hover:bg-brand-primary-hover shadow-sm active:scale-[0.98] disabled:opacity-50;
+}
+
+.btn-secondary {
+  @apply px-6 py-2 border border-brand-border bg-white text-brand-text-main rounded-lg font-semibold transition-all hover:border-brand-primary hover:text-brand-primary shadow-sm;
+}
+
+.nav-link {
+  @apply text-sm font-medium text-brand-text-muted hover:text-brand-primary transition-colors;
+}
+
+.card-sleek {
+  @apply bg-white rounded-xl border border-brand-border shadow-sm hover:shadow-md transition-shadow p-6;
+}

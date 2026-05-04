@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Public and private user information",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "bio": { "type": "string" },
+        "avatar": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "name", "role", "created_at"]
+    },
+    "Category": {
+      "title": "Tutorial Category",
+      "description": "Grouping for tutorials",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["name", "slug"]
+    },
+    "Tutorial": {
+      "title": "Tutorial Module",
+      "description": "Educational content module",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "content": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "category_id": { "type": "string" },
+        "author_id": { "type": "string" },
+        "parent_id": { "type": "string" },
+        "order_index": { "type": "number" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "slug", "content", "category_id", "author_id", "created_at", "updated_at"]
+    },
+    "Comment": {
+      "title": "Dialogue Comment",
+      "description": "User comments on tutorials",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string" },
+        "user_id": { "type": "string" },
+        "user_name": { "type": "string" },
+        "tutorial_id": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["content", "user_id", "tutorial_id", "created_at"]
+    },
+    "Favorite": {
+      "title": "Saved Tutorial",
+      "description": "User's saved/favorite tutorials",
+      "type": "object",
+      "properties": {
+        "user_id": { "type": "string" },
+        "tutorial_id": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["user_id", "tutorial_id", "created_at"]
+    },
+    "ContactMessage": {
+      "title": "Contact Message",
+      "description": "Messages from the contact form",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "subject", "message", "created_at"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile records"
+    },
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Lesson categories"
+    },
+    "/tutorials/{tutorialId}": {
+      "schema": "Tutorial",
+      "description": "Individual tutorial modules"
+    },
+    "/comments/{commentId}": {
+      "schema": "Comment",
+      "description": "User dialogue log"
+    },
+    "/favorites/{favoriteId}": {
+      "schema": "Favorite",
+      "description": "User saved library items"
+    },
+    "/contact_messages/{messageId}": {
+      "schema": "ContactMessage",
+      "description": "Support and system queries"
+    }
+  }
+}
